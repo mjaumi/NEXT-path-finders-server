@@ -91,6 +91,25 @@ async function run() {
             }
         });
 
+        // GET API to get all the posts from server
+        app.get('/get-posts', async (req, res) => {
+            const posts = await postsCollection.find({}).toArray();
+
+            if (posts.length) {
+                res.send({
+                    status: 200,
+                    message: 'Posts fetch successful!',
+                    posts,
+                });
+            } else {
+                res.send({
+                    status: 500,
+                    message: 'Something Went Wrong!',
+                    posts: null,
+                });
+            }
+        });
+
     } finally {
 
     }
