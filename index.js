@@ -26,9 +26,49 @@ async function run() {
 
         // connecting to mongoDB here
         await client.connect();
+        const pathFinderDb = client.db('path-finders');
 
-        await client.db('admin').command({ ping: 1 });
+        const usersCollection = pathFinderDb.collection('users');
+
         console.log('You successfully connected to MongoDB!');
+
+        /**
+         * ------------------------
+         * SERVICES API
+         * ------------------------
+         */
+
+        // POST API to create new user
+        app.post('/new-user', async (req, res) => {
+            const newUser = req.body;
+
+            const existingUser = await usersCollection.findOne({ email: newUser.email });
+
+            if (!existingUser?._id) {
+                const addNewUserResult = await usersCollection.insertOne(newUser);
+
+                if (addNewUserResult.insertedId) {
+                    res.send({
+                        status: 200,
+                        message: 'New User Created!',
+                        user: newUser,
+                    });
+                } else {
+                    res.send({
+                        status: 500,
+                        message: 'Something Went Wrong!',
+                        user: null,
+                    });
+                }
+            } else {
+                res.send({
+                    status: 201,
+                    message: 'User Already Exists!',
+                    user: existingUser,
+                });
+            }
+        });
+
     } finally {
 
     }
