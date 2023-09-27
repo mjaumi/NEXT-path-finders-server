@@ -29,6 +29,7 @@ async function run() {
         const pathFinderDb = client.db('path-finders');
 
         const usersCollection = pathFinderDb.collection('users');
+        const postsCollection = pathFinderDb.collection('posts');
 
         console.log('You successfully connected to MongoDB!');
 
@@ -65,6 +66,27 @@ async function run() {
                     status: 201,
                     message: 'User Already Exists!',
                     user: existingUser,
+                });
+            }
+        });
+
+        // POST API to create new post
+        app.post('/create-post', async (req, res) => {
+            const newPost = req.body;
+
+            const addNewPostResult = await postsCollection.insertOne(newPost);
+
+            if (addNewPostResult.insertedId) {
+                res.send({
+                    status: 200,
+                    message: 'New Post Created!',
+                    post: newPost,
+                });
+            } else {
+                res.send({
+                    status: 500,
+                    message: 'Something Went Wrong!',
+                    post: null,
                 });
             }
         });
