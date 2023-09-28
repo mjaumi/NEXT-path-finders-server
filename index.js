@@ -110,6 +110,27 @@ async function run() {
             }
         });
 
+        // GET API to get currently logged in user details
+        app.get('/current-user/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email };
+            const user = await usersCollection.findOne(query);
+
+            if (user._id) {
+                res.send({
+                    status: 200,
+                    message: 'user found!',
+                    user,
+                });
+            } else {
+                res.send({
+                    status: 404,
+                    message: 'No user found!',
+                    user: null,
+                });
+            }
+        });
+
         // PATCH API to add comment to a particular post in server
         app.patch('/post-comment/:id', async (req, res) => {
             const postId = req.params.id;
