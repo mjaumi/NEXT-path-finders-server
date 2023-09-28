@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
@@ -38,6 +39,37 @@ async function run() {
          * SERVICES API
          * ------------------------
          */
+
+        // POST API to login with email and password
+        app.post('/user-login', async (req, res) => {
+            const credentials = req.body;
+
+            const existingUser = await usersCollection.findOne({ email: credentials.email });
+
+            if (!existingUser) {
+                res.send({
+                    status: 404,
+                    message: 'No Such User Exists!',
+                    user: null,
+                });
+            } else {
+                const passwordMatch = await bcrypt.compare(existingUser.password, credentials.password);
+
+                if (!passwordMatch) {
+                    res.send({
+                        status: 404,
+                        message: 'Invalid Credentials!',
+                        user: null,
+                    });
+                } else {
+                    res.send({
+                        status: 200,
+                        message: 'Login Successful!',
+                        user: existingUser,
+                    });
+                }
+            }
+        });
 
         // POST API to create new user
         app.post('/new-user', async (req, res) => {
