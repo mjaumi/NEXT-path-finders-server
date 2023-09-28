@@ -159,6 +159,60 @@ async function run() {
 
         });
 
+        app.patch('/calculate-reactions', async (req, res) => {
+            const data = req.body;
+
+            const userFilter = { email: data.email };
+            const postFilter = { _id: new ObjectId(data.postId) };
+
+            const user = await usersCollection.findOne(userFilter);
+
+            let alterLikedPosts = null;
+            let alterReactions = null;
+
+            if (user.likedPosts.includes(data.postId)) {
+                alterLikedPosts = {
+                    $pull: {
+                        likedPosts: data.postId,
+                    },
+                };
+
+                alterReactions = {
+                    $set: {
+                        reacts: data.reacts - 1,
+                    },
+                };
+            } else {
+                alterLikedPosts = {
+                    $push: {
+                        likedPosts: data.postId,
+                    },
+                };
+
+                alterReactions = {
+                    $set: {
+                        reacts: data.reacts + 1,
+                    },
+                };
+            }
+
+            const updateUser = await usersCollection.updateOne(userFilter, alterLikedPosts);
+
+            const updatePost = await postsCollection.updateOne(postFilter, alterReactions);
+
+            if (updateUser.modifiedCount && updatePost.modifiedCount) {
+                res.send({
+                    status: 200,
+                    message: 'Reaction added successfully!',
+                });
+            } else {
+                res.send({
+                    status: 500,
+                    message: 'Something Went Wrong!',
+                });
+            }
+        });
+
     } finally {
 
     }
