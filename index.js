@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
 const app = express();
@@ -108,6 +108,34 @@ async function run() {
                     posts: null,
                 });
             }
+        });
+
+        // PATCH API to add comment to a particular post in server
+        app.patch('/post-comment/:id', async (req, res) => {
+            const postId = req.params.id;
+            const newComment = req.body;
+
+            const filter = { _id: new ObjectId(postId) };
+            const addComment = {
+                $push: {
+                    comments: newComment
+                }
+            }
+
+            const updatePost = await postsCollection.updateOne(filter, addComment);
+
+            if (updatePost.modifiedCount) {
+                res.send({
+                    status: 200,
+                    message: 'Comment add successful!',
+                });
+            } else {
+                res.send({
+                    status: 500,
+                    message: 'Something Went Wrong!',
+                });
+            }
+
         });
 
     } finally {
