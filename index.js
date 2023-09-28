@@ -181,6 +181,15 @@ async function run() {
             }
         });
 
+        // GET API to get a single post from server
+        app.get('/get-post/:postId', async (req, res) => {
+            const id = req.params.postId;
+            const query = { _id: new ObjectId(id) };
+            const post = await postsCollection.findOne(query);
+
+            res.send(post);
+        });
+
         // GET API to get currently logged in user details
         app.get('/current-user/:email', async (req, res) => {
             const email = req.params.email;
