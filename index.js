@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 
@@ -40,8 +40,47 @@ async function run() {
          * ------------------------
          */
 
-        // POST API to login with email and password
-        app.post('/user-login', async (req, res) => {
+        // POST API to signup new user with email and password
+        app.post('/user-signup', async (req, res) => {
+            let newUser = req.body;
+
+            const existingUser = await usersCollection.findOne({ email: newUser.email });
+
+            if (existingUser) {
+                res.send({
+                    status: 404,
+                    message: 'User Already Exists!',
+                    user: null,
+                });
+            } else {
+                const hash = await bcrypt.hash(newUser.password, 10);
+
+                newUser = {
+                    ...newUser,
+                    password: hash,
+                }
+
+                const userResult = await usersCollection.insertOne(newUser);
+
+                if (userResult.insertedId) {
+                    res.send({
+                        status: 200,
+                        message: 'Registration Successful!',
+                        user: newUser,
+                    });
+                } else {
+                    res.send({
+                        status: 500,
+                        message: 'Something Went Wrong!',
+                        user: null,
+                    });
+                }
+            }
+
+        });
+
+        // POST API to signin with email and password
+        app.post('/user-signin', async (req, res) => {
             const credentials = req.body;
 
             const existingUser = await usersCollection.findOne({ email: credentials.email });
@@ -53,11 +92,11 @@ async function run() {
                     user: null,
                 });
             } else {
-                const passwordMatch = await bcrypt.compare(existingUser.password, credentials.password);
+                const passwordMatch = await bcrypt.compare(credentials.password, existingUser.password);
 
                 if (!passwordMatch) {
                     res.send({
-                        status: 404,
+                        status: 401,
                         message: 'Invalid Credentials!',
                         user: null,
                     });
